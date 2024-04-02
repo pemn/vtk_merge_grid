@@ -20,34 +20,33 @@ def vtk_merge_grid(grid0, grid1):
   d1 = vtk_shape_ijk(grid1.dimensions)
   t0 = np.minimum(d0, d1)
   t1 = np.maximum(d0, d1)
+  print('d0 =',*d0,'| d1 =',*d1)
   print('t0 =',*t0,'| t1 =',*t1)
 
   spacing = vtk_spacing_fit(grid1.dimensions, grid1.spacing, np.flip(t1))
   grid = pv.ImageData(dimensions=np.flip(t1), spacing=spacing, origin=grid1.origin)
-
-  n1 = np.transpose(np.meshgrid(*[np.linspace(0, d0[_], t1[_], False, dtype=np.int_) for _ in range(len(d0))]), (2,1,3,0))
 
   for name in grid0.array_names:
     data = None
     s0 = None
     s1 = None
     if grid0.get_array_association(name) == pv.FieldAssociation.CELL:
-      c0 = np.maximum(np.subtract(d0, 1), 1)
-      c1 = np.maximum(np.subtract(t1, 1), 1)
-      s0 = np.reshape(grid0.get_array(name), c0)
-      s1 = np.empty(c1, dtype=s0.dtype)
+      s0 = np.reshape(grid0.get_array(name), np.maximum(np.subtract(d0, 1), 1))
+      s1 = np.empty(np.maximum(np.subtract(t1, 1), 1), dtype=s0.dtype)
       data = grid.cell_data
     else:
       s0 = np.reshape(grid0.get_array(name), d0)
       s1 = np.empty(t1, dtype=s0.dtype)
       data = grid.point_data
 
+    mg = np.transpose(np.meshgrid(*[np.linspace(0, s0.shape[_], s1.shape[_], False, dtype=np.int_) for _ in range(len(d0))]), (2,1,3,0))
     it = np.nditer(s1, ['multi_index'])
     while not it.finished:
-      s1[it.multi_index] = s0[tuple(n1[it.multi_index])]
+      s1[it.multi_index] = s0[tuple(mg[it.multi_index])]
       it.iternext()
     data[name] = s1.flat
 
+  #grid.set_active_scalars(grid0.active_scalars_name)
   return grid
 
 def main(source_grid, target_grid, output, display):
@@ -58,9 +57,13 @@ def main(source_grid, target_grid, output, display):
     spacing = np.resize(np.asfarray(re.split('[,_]', target_grid)), 3)
     origin = None
     if grid0.GetDataObjectType() == 2:
-      b = np.reshape(grid0.bounds, (3,2))
-      dims = np.maximum(np.add(np.ceil(np.divide(b[:, 1] - b[:, 0], spacing)), 1), 1).astype(np.int_)
-      origin = b[:, 0]
+      b0 = np.reshape(grid0.bounds, (3,2))
+      
+      p0 = np.subtract(b0[:, 1], b0[:, 0])
+      c0 = np.divide(p0, np.maximum(np.subtract(grid0.dimensions, 1), 1))
+      dims = np.maximum(np.ceil(np.divide(np.add(p0, c0), spacing)), 1).astype(np.int_)
+      
+      origin = b0[:, 0]
     else:
       dims = np.maximum(np.ceil(np.divide(np.multiply(grid0.dimensions, grid0.spacing), spacing)), 1).astype(np.int_)
       origin = grid0.origin
@@ -69,7 +72,6 @@ def main(source_grid, target_grid, output, display):
     grid1 = pv.read(target_grid)
 
   grid = vtk_merge_grid(grid0, grid1)
-  grid.set_active_scalars(grid0.active_scalars_name)
 
   print(vtk_mesh_info(grid))
   if grid is not None and output:
