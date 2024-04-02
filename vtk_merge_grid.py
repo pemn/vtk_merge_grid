@@ -78,21 +78,16 @@ def main(source_grid, target_grid, output, display):
     grid.save(output)
 
   if int(display):
-    name = grid.active_scalars_name
-    if not name:
-      name = None
-    s0 = vtk_array_ijk(grid0, name, True)
-    s1 = vtk_array_ijk(grid, name, True)
+    s0 = vtk_array_ijk(grid0, None, True)
+    s1 = vtk_array_ijk(grid, None, True)
 
     cmap = plt.get_cmap()
     plt.subplot(121, projection='3d')
-    if name is not None:
-      plt.title(name)
+    plt.title('old (%d ✕ %d ✕ %d)' % s0.shape)
     plt.gca().voxels(s0, facecolors=cmap(s0))
 
     plt.subplot(122, projection='3d')
-    if name is not None:
-      plt.title(name)
+    plt.title('new (%d ✕ %d ✕ %d)' % s1.shape)
     plt.gca().voxels(s1, facecolors=cmap(s1))
 
     plt.show()
