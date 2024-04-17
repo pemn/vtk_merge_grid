@@ -536,19 +536,19 @@ def mesh_rotate_0261(mesh, bearing, origin, axis = 'z'):
       mesh.rotate_z(r, origin)
   return mesh
 
-def vtk_spacing_fit(dims, d0, d1, cell = False):
+def vtk_spacing_fit(dims, d0, d1, cell = None):
   spacing = np.divide(np.multiply(dims, d0), d1)
   if cell:
     spacing = np.divide(np.multiply(np.maximum(np.subtract(dims, 1), 1), d0), d1)
   return spacing
 
-def vtk_shape_ijk(dims, cell = False):
+def vtk_shape_ijk(dims, cell = None):
   shape = np.flip(dims)
   if cell:
     shape = np.maximum(np.subtract(shape, 1), 1)
   return shape
 
-def vtk_reshape_ijk(dims, s, cell = False):
+def vtk_reshape_ijk(dims, s, cell = None):
   ''' convert a flat array into a 3d (k,j,i) array '''
   return np.reshape(s, vtk_shape_ijk(dims, cell))
 
@@ -556,9 +556,14 @@ def vtk_array_ijk(self, array_name = None, cell = None):
   s = None
   if array_name is None:
     if cell:
-      s = np.linspace(0, 1, self.n_cells)
+      s = np.arange(self.n_cells)
     else:
-      s = np.linspace(0, 1, self.n_points)
+      s = np.arange(self.n_points)
+  elif array_name is True:
+    if cell:
+      s = np.linspace(1, 0, self.n_cells, False)
+    else:
+      s = np.linspace(1, 0, self.n_points, False)    
   else:
     if cell is None:
       cell = self.get_array_association(array_name) == pv.FieldAssociation.CELL
@@ -568,6 +573,35 @@ def vtk_array_ijk(self, array_name = None, cell = None):
 def vtk_reshape_a3d(dims, s, cell = False):
   ''' convert a flat array into a 3d (x,y,z) array '''
   return np.transpose(vtk_reshape_ijk(dims, s, cell), (2,1,0))
+
+def vtk_cell_size(self):
+  ''' return cell size regardless of vtk grid type '''
+  if hasattr(self, 'spacing'):
+    return self.spacing
+  b0 = np.reshape(self.bounds, (3,2))
+  p0 = np.subtract(b0[:, 1], b0[:, 0])
+  return np.divide(p0, np.maximum(np.subtract(self.dimensions, 1), 1))
+
+def vtk_plot_grids(grids, variable = None):
+  if not isinstance(grids, (list, tuple)):
+    grids = [grids]
+  import matplotlib.pyplot as plt
+  cmap = plt.get_cmap()
+
+  nrows = int(np.sqrt(len(grids)))
+  ncols = int(np.ceil(len(grids) / nrows))
+  fig, ax = plt.subplots(nrows, ncols, tight_layout=True, squeeze=False, subplot_kw=dict(projection='3d'))
+  ax
+  for i in range(len(grids)):
+    s = vtk_array_ijk(grids[i], variable if variable else True)
+
+    if variable and np.var(s):
+      s = np.maximum(np.divide(np.subtract(s, np.min(s)), np.subtract(np.max(s), np.min(s))), 0.001)
+
+    ax.flat[i].set_title('%s %d ✕ %d ✕ %d' % (variable, s.shape[0], s.shape[1], s.shape[2]))
+    ax.flat[i].voxels(s, facecolors=cmap(s))
+
+  plt.show()
 
 class vtk_Voxel(object):
   @classmethod
