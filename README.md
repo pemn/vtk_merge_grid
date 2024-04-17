@@ -12,7 +12,10 @@ display||show results in a 3d voxel chart
 ## 📓 Notes
 The result will be a grid with a different dimensions and spacing but with the source data in the same relative position.
 ## 📚 Examples
+### reducing grid cell size
 ![screenshot2](https://github.com/pemn/assets/blob/main/vtk_merge_grid2.png?raw=true)
+### increasing grid cell size
+![screenshot3](https://github.com/pemn/assets/blob/main/vtk_merge_grid3.png?raw=true)
 ## 🧩 Compatibility
 distribution|status
 ---|---
