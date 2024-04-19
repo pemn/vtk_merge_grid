@@ -1,6 +1,6 @@
 ## 📌 Description
-transfer data between grids with different schemas (reblock).
-from a given grid can either make the cells smaller or larger, while preserving the values.
+transfer data between grids with different schemas (reblock).  
+can make grid cells smaller or larger, while preserving the values.
 ## 📸 Screenshot
 ![screenshot1](https://github.com/pemn/assets/blob/main/vtk_merge_grid1.png?raw=true)
 ## 📝 Parameters
