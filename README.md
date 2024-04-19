@@ -19,7 +19,7 @@ The result will be a grid with a different dimensions and spacing but with the s
 ![screenshot3](https://github.com/pemn/assets/blob/main/vtk_merge_grid3.png?raw=true)
   
 The above images only show the new cell sizes.  
-But ene important point that is not illustrated is that array data in both cell and point arrays are preserved!
+But one important point that is not illustrated in the images is that array data in both cell and point arrays are preserved!
 ## 🧩 Compatibility
 distribution|status
 ---|---
